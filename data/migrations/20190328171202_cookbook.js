@@ -1,19 +1,18 @@
 exports.up = function(knex, Promise) {
   return knex.schema
-    .createTable('dishs', function(tbl) {
-      // primary key, called id and make it auto-increment
+    .createTable('dishes', tbl => {
       tbl.increments();
-
       tbl
         .string('name', 128)
         .notNullable()
         .unique();
-
-      // tbl.unique('name');
     })
     .createTable('recipes', tbl => {
       tbl.increments();
-      tbl.string('name', 128);
+      tbl
+        .string('name', 128)
+        .notNullable()
+        .unique();
       tbl.text('directions').notNullable();
     })
     .createTable('ingredients', tbl => {
@@ -22,12 +21,11 @@ exports.up = function(knex, Promise) {
         .string('name', 255)
         .notNullable()
         .unique();
-      tbl.decimal('quantity').notNullable();
     })
-    .createTable('recipestyles', tbl => {
+    .createTable('recipe_styles', tbl => {
       tbl.increments();
       tbl
-        .string('name', 255)
+        .string('name', 128)
         .notNullable()
         .unique();
       tbl
@@ -38,30 +36,43 @@ exports.up = function(knex, Promise) {
         .inTable('dishes')
         .onDelete('CASCADE')
         .onUpdate('CASCADE');
-    })
-    .createTable('recipe-ingredients', tbl => {
-      tbl.increments();
-      tbl
-        .string('name', 255)
-        .notNullable()
-        .unique();
       tbl
         .integer('recipe_id')
         .unsigned()
         .notNullable()
         .references('id')
-        .inTable('recipe')
+        .inTable('recipes')
+        .onDelete('CASCADE')
+        .onUpdate('CASCADE');
+    })
+    .createTable('recipe_ingredients', tbl => {
+      tbl.increments();
+
+      tbl
+        .integer('recipe_id')
+        .unsigned()
+        .notNullable()
+        .references('id')
+        .inTable('recipes')
+        .onDelete('CASCADE')
+        .onUpdate('CASCADE');
+      tbl.decimal('quantity').notNullable();
+      tbl
+        .integer('ingredient_id')
+        .unsigned()
+        .notNullable()
+        .references('id')
+        .inTable('recipes')
         .onDelete('CASCADE')
         .onUpdate('CASCADE');
     });
 };
 
 exports.down = function(knex, Promise) {
-  // tables with FK must be removed before the referenced table is removed
   return knex.schema
-    .dropTableIfExists('recipe-ingredients')
-    .dropTableIfExists('recipestyles')
+    .dropTableIfExists('recipe_ingredients')
+    .dropTableIfExists('recipe_styles')
     .dropTableIfExists('ingredients')
     .dropTableIfExists('recipes')
-    .dropTableIfExists('dishs');
+    .dropTableIfExists('dishes');
 };
